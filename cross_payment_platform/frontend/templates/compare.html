@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Compare Platforms</div>
+<div class="page-subtitle">Select 2 or more platforms to compare their efficiency — minimum 2 required</div>
+
+<div class="card">
+  <div class="section-label">Select Platforms to Compare</div>
+  <div class="grid-3" id="platformGrid" style="gap:12px;">
+    {% for name, cfg in platforms.items() %}
+    <div class="checkbox-card" data-platform="{{ name }}" onclick="togglePlatform(this)">
+      <div>
+        <div class="plat-name">{{ name }}</div>
+        <div class="plat-network">{{ cfg.network }}</div>
+      </div>
+      <input type="checkbox" style="pointer-events:none;">
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="compareResults" class="hidden">
+  <div class="card">
+    <h3 id="compareTitle">Efficiency Comparison</h3>
+    <div class="card-sub">Live metrics from the recommendation engine</div>
+    <table id="compareTable"></table>
+  </div>
+  <div class="card">
+    <h3>Performance Metrics Comparison</h3>
+    <div class="card-sub">Fee Efficiency &amp; Speed Score normalized to 0–100 (higher = better)</div>
+    <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+  </div>
+</div>
+
+<script>
+let selected = [];
+let chartInstance = null;
+
+function togglePlatform(el) {
+  const name = el.dataset.platform;
+  const checkbox = el.querySelector('input');
+  if (selected.includes(name)) {
+    selected = selected.filter(n => n !== name);
+    el.classList.remove('selected');
+    checkbox.checked = false;
+  } else {
+    selected.push(name);
+    el.classList.add('selected');
+    checkbox.checked = true;
+  }
+  if (selected.length >= 2) {
+    loadComparison();
+  } else {
+    document.getElementById('compareResults').classList.add('hidden');
+  }
+}
+
+async function loadComparison() {
+  const res = await fetch('/api/compare?platforms=' + encodeURIComponent(selected.join(',')));
+  const data = await res.json();
+  const rows = data.comparison;
+
+  document.getElementById('compareResults').classList.remove('hidden');
+  document.getElementById('compareTitle').textContent =
+    'Efficiency Comparison — ' + rows.map(r => r.platform).join(' vs ');
+
+  let html = '<thead><tr><th>Metric</th>' + rows.map(r => `<th>${r.platform}</th>`).join('') + '</tr></thead><tbody>';
+  const metricRows = [
+    ['PRI Score', r => r.pri_score],
+    ['Success Rate', r => r.success_rate + '%'],
+    ['Transaction Fee', r => 'TZS ' + r.fee],
+    ['Speed', r => r.speed_seconds + 's'],
+    ['Network', r => r.network],
+    ['Category', r => r.category],
+  ];
+  for (const [label, fn] of metricRows) {
+    html += `<tr><td>${label}</td>` + rows.map(r => `<td>${fn(r)}</td>`).join('') + '</tr>';
+  }
+  html += '</tbody>';
+  document.getElementById('compareTable').innerHTML = html;
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+      labels: ['PRI Score', 'Success Rate', 'Fee Efficiency', 'Speed Score'],
+      datasets: rows.map((r, i) => ({
+        label: r.platform,
+        data: [r.pri_score, r.success_rate, Math.max(0, 100 - (r.fee / 500)), Math.max(0, 100 - r.speed_seconds)],
+        backgroundColor: ['#22c55e', '#2563eb', '#f59e0b', '#8b5cf6'][i % 4]
+      }))
+    },
+    options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}}
+  });
+}
+</script>
+{% endblock %}

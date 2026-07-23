@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="display:flex; gap:16px; align-items:center;">
+  <div class="logo-badge" style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#2563eb,#22c55e);display:flex;align-items:center;justify-content:center;font-size:24px;">💠</div>
+  <div>
+    <h3 style="font-size:18px;">Cross Payment Platform</h3>
+    <div class="card-sub">Tanzania Payment Intelligence System · v1.0</div>
+    <div>
+      <span class="badge badge-success">AI-Powered</span>
+      <span class="badge badge-mobile">Real-Time</span>
+      <span class="badge badge-bank">Tanzania-Built</span>
+      <span class="badge badge-success">Privacy-First</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>🌐 What We Do</h3>
+    <p style="font-size:13px; line-height:1.6;">
+      Cross Payment Platform is an AI-powered payment intelligence system built for Tanzania.
+      It analyses transaction data across {{ platforms|length }} major payment platforms —
+      {{ platforms.keys()|join(', ') }} — to recommend the cheapest, fastest, and most reliable
+      option for a given transaction at any given moment and location.
+    </p>
+    <h3 style="margin-top:20px;">⚡ How It Works</h3>
+    <ol style="font-size:13px; line-height:1.8; padding-left:18px;">
+      <li><strong>Enter Transaction Details</strong> — amount, type, and location of your planned transfer.</li>
+      <li><strong>AI Calculates PRI</strong> — the engine computes the Payment Reliability Index for every platform using success rate, efficiency, speed, and cost.</li>
+      <li><strong>Instant Recommendation</strong> — you receive the best platform with a fee comparison, estimated speed, and savings amount — all in under a second.</li>
+    </ol>
+    <h3 style="margin-top:20px;">🛡 Our Technology</h3>
+    <ul style="font-size:13px; line-height:1.8; padding-left:18px;">
+      <li>Payment Reliability Index (PRI): 40% Success Rate + 30% Efficiency + 20% Speed + 10% Cost</li>
+      <li>Random Forest classifier for payment success prediction</li>
+      <li>Gradient Boosting model for transaction risk / fraud-pattern flagging</li>
+      <li>Trained on a 20,500-row synthetic Tanzania payment transaction dataset</li>
+      <li>Location-aware routing: recommendations adapt to Tanzania regions</li>
+      <li>Smart routing: transactions above TZS 5,000,000 auto-route to bank/aggregator platforms</li>
+      <li>Peak-hour congestion alerts based on historical traffic patterns</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="card">
+      <h3>🛡 Privacy Policy</h3>
+      <p style="font-size:12.5px;"><strong>Data Collected:</strong> Transaction types, amounts (for savings calculation only), and location names you enter. No personal financial credentials are ever collected.</p>
+      <p style="font-size:12.5px;"><strong>Data Storage:</strong> Your account and history are stored in a local SQLite database on the server you deploy this to.</p>
+      <p style="font-size:12.5px;"><strong>Data Sharing:</strong> We do not sell, share, or transmit your data to any third party.</p>
+      <p style="font-size:12.5px;"><strong>Data Retention:</strong> Your data persists until you clear it from Settings → Data Management.</p>
+      <p style="font-size:12.5px;"><strong>Your Rights:</strong> You may access, export, or delete all data held about you at any time via the Settings page.</p>
+    </div>
+
+    <div class="card">
+      <h3>👥 Our Team</h3>
+      <div class="team-member">
+        <div class="avatar" style="background:#7c3aed;">SH</div>
+        <div>
+          <strong>Sabrina Hassan Lidenge</strong><br>
+          <span style="font-size:12px;color:#8b98ac;">Web Designer · Data Scientist &amp; AI Engineer</span>
+        </div>
+      </div>
+      <div class="team-member">
+        <div class="avatar" style="background:#22c55e;">WN</div>
+        <div>
+          <strong>Wilfred Narsis Lushagara</strong><br>
+          <span style="font-size:12px;color:#8b98ac;">Model Trainer · Data Scientist &amp; AI Engineer</span>
+        </div>
+      </div>
+      <div class="team-member">
+        <div class="avatar" style="background:#f97316;">MJ</div>
+        <div>
+          <strong>Maria John Banzi</strong><br>
+          <span style="font-size:12px;color:#8b98ac;">Backend Coder · Data Scientist &amp; AI Engineer</span>
+        </div>
+      </div>
+      <div class="team-member">
+        <div class="avatar" style="background:#06b6d4;">GV</div>
+        <div>
+          <strong>Godfrey Valentine Marusu</strong><br>
+          <span style="font-size:12px;color:#8b98ac;">Project Report Writer · Data Scientist &amp; AI Engineer</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

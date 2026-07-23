@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <div class="page-title">Settings</div>
+    <div class="page-subtitle">Personalise your Cross Payment Platform experience</div>
+  </div>
+  <button class="btn btn-green" onclick="saveSettings()">Save Changes</button>
+</div>
+
+<div class="card">
+  <div class="section-label">Profile</div>
+  <div class="form-row">
+    <div><div class="label">Display Name</div><div class="desc">How we address you in the app</div></div>
+    <input type="text" id="display_name" value="{{ user.display_name }}">
+  </div>
+  <div class="form-row">
+    <div><div class="label">Email Address</div><div class="desc">For weekly savings reports</div></div>
+    <input type="text" id="email" value="{{ user.email or '' }}" placeholder="you@example.com">
+  </div>
+  <div class="form-row">
+    <div><div class="label">Phone Number</div><div class="desc">For SMS peak-hour alerts (optional)</div></div>
+    <input type="text" id="phone" value="{{ user.phone or '' }}" placeholder="+255 7XX XXX XXX">
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Transaction Defaults</div>
+  <div class="form-row">
+    <div><div class="label">Default Transaction Type</div><div class="desc">Pre-selected when opening a new transaction</div></div>
+    <select id="default_transaction_type">
+      {% for t in transaction_types %}
+      <option value="{{ t }}" {{ 'selected' if settings.default_transaction_type==t else '' }}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Default Location</div><div class="desc">Your most frequent transaction location</div></div>
+    <select id="default_location">
+      {% for l in locations %}
+      <option value="{{ l }}" {{ 'selected' if settings.default_location==l else '' }}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Notifications</div>
+  <div class="form-row">
+    <div><div class="label">Email Savings Reports</div><div class="desc">Receive a weekly summary of money saved</div></div>
+    <label class="toggle"><input type="checkbox" id="email_savings_reports" {{ 'checked' if settings.email_savings_reports }}><span class="slider"></span></label>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Peak Hour Alerts</div><div class="desc">Notify when network congestion is expected</div></div>
+    <label class="toggle"><input type="checkbox" id="peak_hour_alerts" {{ 'checked' if settings.peak_hour_alerts }}><span class="slider"></span></label>
+  </div>
+  <div class="form-row">
+    <div><div class="label">SMS Alerts</div><div class="desc">Critical alerts via SMS (requires phone number)</div></div>
+    <label class="toggle"><input type="checkbox" id="sms_alerts" {{ 'checked' if settings.sms_alerts }}><span class="slider"></span></label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Display &amp; Language</div>
+  <div class="form-row">
+    <div><div class="label">Language</div><div class="desc">Interface language</div></div>
+    <select id="language"><option {{ 'selected' if settings.language=='English' }}>English</option><option {{ 'selected' if settings.language=='Swahili' }}>Swahili</option></select>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Date Format</div><div class="desc">How dates are displayed</div></div>
+    <select id="date_format"><option {{ 'selected' if settings.date_format=='DD/MM/YYYY' }}>DD/MM/YYYY</option><option {{ 'selected' if settings.date_format=='MM/DD/YYYY' }}>MM/DD/YYYY</option></select>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Theme</div><div class="desc">App colour scheme</div></div>
+    <select id="theme"><option {{ 'selected' if settings.theme=='Light' }}>Light</option><option {{ 'selected' if settings.theme=='Dark' }}>Dark</option></select>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Privacy &amp; Security</div>
+  <div class="form-row">
+    <div><div class="label">Privacy Mode</div><div class="desc">Mask transaction amounts in history views</div></div>
+    <label class="toggle"><input type="checkbox" id="privacy_mode" {{ 'checked' if settings.privacy_mode }}><span class="slider"></span></label>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Data Retention</div><div class="desc">How long to keep your recommendation history</div></div>
+    <input type="number" id="data_retention_days" value="{{ settings.data_retention_days }}" style="width:80px;">
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Data Management</div>
+  <div class="form-row">
+    <div><div class="label">Export Your Data</div><div class="desc">Download all your recommendation history as JSON</div></div>
+    <a class="btn btn-outline" href="/api/export" target="_blank">Export JSON</a>
+  </div>
+  <div class="form-row">
+    <div><div class="label">Clear All Data</div><div class="desc">Delete your session history and reset statistics</div></div>
+    <button class="btn btn-danger" onclick="clearAllData()">Clear Data</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">Account</div>
+  <div class="form-row">
+    <div><div class="label">Signed in as</div><div class="desc">{{ user.username }} · {{ user.email or 'no email set' }}</div></div>
+    <a class="btn btn-outline" href="/logout">Sign Out</a>
+  </div>
+</div>
+
+<script>
+async function saveSettings() {
+  const payload = {
+    default_transaction_type: document.getElementById('default_transaction_type').value,
+    default_location: document.getElementById('default_location').value,
+    email_savings_reports: document.getElementById('email_savings_reports').checked ? 1 : 0,
+    peak_hour_alerts: document.getElementById('peak_hour_alerts').checked ? 1 : 0,
+    sms_alerts: document.getElementById('sms_alerts').checked ? 1 : 0,
+    language: document.getElementById('language').value,
+    date_format: document.getElementById('date_format').value,
+    theme: document.getElementById('theme').value,
+    privacy_mode: document.getElementById('privacy_mode').checked ? 1 : 0,
+    data_retention_days: parseInt(document.getElementById('data_retention_days').value || 90),
+  };
+  await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  alert('Settings saved.');
+}
+
+async function clearAllData() {
+  if (!confirm('This will permanently delete your transaction history and reset statistics. Continue?')) return;
+  await fetch('/api/transactions', {method: 'DELETE'});
+  alert('Your data has been cleared.');
+  location.href = '/dashboard';
+}
+</script>
+{% endblock %}

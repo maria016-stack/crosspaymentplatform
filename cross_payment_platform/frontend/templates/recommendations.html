@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">All Recommendations</div>
+<div class="page-subtitle">Every platform recommendation made by the AI engine</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Date & Time</th><th>Amount (TZS)</th><th>Transaction Type</th>
+        <th>Recommended Platform</th><th>Location</th><th>PRI Score</th><th>Savings</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ t.created_at[:16].replace('T',' ') }}</td>
+        <td>{{ '%.0f'|format(t.amount) }}</td>
+        <td><span class="badge badge-mobile">{{ t.transaction_type }}</span></td>
+        <td>{{ t.recommended_platform }}</td>
+        <td>{{ t.location }}</td>
+        <td>{{ t.pri_score }}</td>
+        <td>TZS {{ '%.0f'|format(t.savings) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if not transactions %}
+    <p style="color:#8b98ac; font-size:13px; text-align:center; padding:20px 0;">No recommendations found. Start a <a href="/new-transaction">new transaction</a>.</p>
+  {% else %}
+    <p style="color:#8b98ac; font-size:12.5px; text-align:center; margin-top:14px;">{{ transactions|length }} recommendations found</p>
+  {% endif %}
+</div>
+{% endblock %}

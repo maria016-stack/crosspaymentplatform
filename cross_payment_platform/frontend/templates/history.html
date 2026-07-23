@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Transaction History</div>
+<div class="page-subtitle">All transactions recommended by the AI router</div>
+
+<div class="grid-2" style="margin-bottom:0;">
+  <div class="card">
+    <div class="stat-box">
+      <div class="stat-icon">📉</div>
+      <div>
+        <div class="stat-label">Total Savings</div>
+        <div class="stat-value" style="color:#22c55e;">TZS {{ '%.0f'|format(savings.total) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stat-box">
+      <div class="stat-icon">📊</div>
+      <div>
+        <div class="stat-label">Avg. PRI Score</div>
+        <div class="stat-value">{{ '%.1f'|format(savings.avg_pri) if savings.avg_pri else '—' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+    <button class="btn btn-danger" onclick="clearHistory()">Clear History</button>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Amount (TZS)</th><th>Type</th><th>Platform</th><th>Location</th><th>Fee (TZS)</th><th>Savings (TZS)</th></tr>
+    </thead>
+    <tbody id="historyBody">
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.created_at[:16].replace('T',' ') }}</td>
+        <td>{{ '%.0f'|format(t.amount) }}</td>
+        <td>{{ t.transaction_type }}</td>
+        <td>{{ t.recommended_platform }}</td>
+        <td>{{ t.location }}</td>
+        <td>{{ '%.0f'|format(t.fee) }}</td>
+        <td>{{ '%.0f'|format(t.savings) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p style="color:#8b98ac; font-size:12.5px; text-align:center; margin-top:14px;">{{ transactions|length }} transactions shown</p>
+</div>
+
+<script>
+async function clearHistory() {
+  if (!confirm('Delete your entire transaction history? This cannot be undone.')) return;
+  await fetch('/api/transactions', {method: 'DELETE'});
+  location.reload();
+}
+</script>
+{% endblock %}

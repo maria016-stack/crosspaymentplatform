@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Industry Details</div>
+
+<div class="card">
+  <h3>Highest Congestion Periods — Tanzania</h3>
+  <div class="card-sub">Transaction traffic level index by time window</div>
+  <div class="chart-wrap"><canvas id="congestionChart"></canvas></div>
+</div>
+
+<div class="card">
+  <h3>Platform-Specific Peak Hours (EAT)</h3>
+  <table>
+    <thead><tr><th>Platform</th><th>Typical Peak Hours</th><th>Reason</th></tr></thead>
+    <tbody>
+      {% for p in peak_hours %}
+      <tr>
+        <td>{{ p.platform }}</td>
+        <td style="color:#c2410c; font-weight:600;">{{ p.hours }}</td>
+        <td style="color:#8b98ac;">{{ p.reason }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="alert-box alert-info" style="margin-top:16px;">
+    ℹ️ <div>
+      <strong>Confidence Level — Evidence-Informed Estimates</strong><br>
+      These windows are synthesised from historical transaction patterns, reported service disruptions,
+      and general banking/merchant activity across Tanzania. For a payment router, 17:00-20:30 EAT is the
+      primary peak-time alert window, with secondary alerts at 07:30-09:30 and 12:00-14:00.
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadCongestion() {
+  const res = await fetch('/api/industry/congestion');
+  const data = await res.json();
+  const colors = data.congestion.map(c => {
+    if (c.label === 'Very High') return '#dc2626';
+    if (c.label === 'High') return '#f97316';
+    if (c.label === 'Moderate') return '#f59e0b';
+    return '#22c55e';
+  });
+  new Chart(document.getElementById('congestionChart'), {
+    type: 'bar',
+    data: {
+      labels: data.congestion.map(c => c.window),
+      datasets: [{label: 'Traffic Level %', data: data.congestion.map(c => c.level), backgroundColor: colors}]
+    },
+    options: {indexAxis: 'y', responsive:true, maintainAspectRatio:false, scales:{x:{beginAtZero:true, max:100}}}
+  });
+}
+loadCongestion();
+</script>
+{% endblock %}

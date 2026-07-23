@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">Analytics</div>
+<div class="page-subtitle">Platform performance across Tanzania</div>
+
+<div class="card">
+  <h3>Monthly Transaction Success vs Failure Rate — Tanzania 2026</h3>
+  <div class="card-sub">Computed from live recommendation data across all platforms</div>
+  <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+</div>
+
+<div class="card">
+  <h3>Success Rate vs PRI Score — All Platforms</h3>
+  <div class="card-sub">Higher is better for both metrics</div>
+  <div class="chart-wrap"><canvas id="platformChart"></canvas></div>
+</div>
+
+<script>
+async function loadAnalytics() {
+  const res = await fetch('/api/analytics');
+  const data = await res.json();
+
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: data.monthly.map(m => m.month),
+      datasets: [
+        {label: 'Success Rate %', data: data.monthly.map(m => m.success_rate), backgroundColor: '#22c55e'},
+        {label: 'Failure Rate %', data: data.monthly.map(m => m.failure_rate), backgroundColor: '#ef4444'}
+      ]
+    },
+    options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}}
+  });
+
+  new Chart(document.getElementById('platformChart'), {
+    type: 'bar',
+    data: {
+      labels: data.platform_stats.map(p => p.platform),
+      datasets: [
+        {label: 'Success Rate %', data: data.platform_stats.map(p => p.success_rate), backgroundColor: '#22c55e'},
+        {label: 'PRI Score', data: data.platform_stats.map(p => p.pri_score), backgroundColor: '#2563eb'}
+      ]
+    },
+    options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}}
+  });
+}
+loadAnalytics();
+</script>
+{% endblock %}

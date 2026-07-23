@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-title">New Transaction</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="section-label">Transaction Details</div>
+    <label class="field-label">Amount (TZS)</label>
+    <input class="input-full" type="number" id="amount" placeholder="50000" min="100" value="50000">
+
+    <label class="field-label">Transaction Type</label>
+    <select class="input-full" id="transaction_type">
+      {% for t in transaction_types %}
+      <option value="{{ t }}" {{ 'selected' if settings and settings.default_transaction_type==t else '' }}>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="field-label">Location (Tanzania)</label>
+    <select class="input-full" id="location">
+      {% for l in locations %}
+      <option value="{{ l }}" {{ 'selected' if settings and settings.default_location==l else '' }}>{{ l }}</option>
+      {% endfor %}
+    </select>
+
+    <button class="btn btn-green btn-full" onclick="getBestPlatform()">⚡ Get Best Platform</button>
+
+    <div id="resultBox" class="recommend-result hidden">
+      <div class="title" id="resultTitle"></div>
+      <div class="meta" id="resultMeta"></div>
+      <div class="meta" id="resultBlurb" style="margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Last 3 Transactions</h3>
+    {% if last_transactions %}
+      {% for t in last_transactions %}
+      <div style="padding:10px 0; border-bottom:1px solid #e5e9f0;">
+        <strong>{{ t.recommended_platform }}</strong> — {{ t.transaction_type }} · {{ t.location }}<br>
+        <span style="font-size:12px;color:#8b98ac;">TZS {{ '%.0f'|format(t.amount) }} · Fee: TZS {{ '%.0f'|format(t.fee) }} · Saved TZS {{ '%.0f'|format(t.savings) }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p style="color:#8b98ac; font-size:13px;">No transactions yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+async function getBestPlatform() {
+  const amount = parseFloat(document.getElementById('amount').value || 0);
+  const transaction_type = document.getElementById('transaction_type').value;
+  const location = document.getElementById('location').value;
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Calculating...';
+
+  try {
+    const res = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({amount, transaction_type, location})
+    });
+    const data = await res.json();
+    const best = data.recommended;
+
+    document.getElementById('resultBox').classList.remove('hidden');
+    document.getElementById('resultTitle').textContent = `Recommended: ${best.platform}`;
+    document.getElementById('resultMeta').textContent =
+      `PRI Score: ${best.pri_score} · Fee: TZS ${best.fee} · Speed: ${best.speed_seconds}s`;
+    document.getElementById('resultBlurb').textContent =
+      (data.smart_routed ? 'Smart-routed to a bank/aggregator platform because the amount exceeds TZS 5,000,000. '
+        : '') + (data.is_peak ? 'Peak-hour congestion detected — estimates may vary slightly.' : '');
+  } catch (e) {
+    alert('Could not get a recommendation. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚡ Get Best Platform';
+  }
+}
+</script>
+{% endblock %}

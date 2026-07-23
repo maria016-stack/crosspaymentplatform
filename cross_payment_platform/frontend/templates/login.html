@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cross Payment Platform - Sign In</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="login-shell">
+    <div class="login-card">
+      <div class="logo-badge">💠</div>
+      <h1>Cross Payment Platform</h1>
+      <p class="subtitle">Tanzania Payment Intelligence System</p>
+      <p style="font-size:13px;font-weight:600;margin-bottom:16px;">Sign in or create an account to continue</p>
+
+      {% if error %}
+        <div class="error-msg">{{ error }}</div>
+      {% endif %}
+
+      <a class="btn-google" href="/login/google-demo">
+        <span>🇬</span> Continue with Google
+      </a>
+      <button class="btn-email" onclick="toggleEmailForm()">✉ Continue with Email</button>
+
+      <div id="emailForm" class="hidden">
+        <div class="divider">— sign in with your account —</div>
+        <form method="post" action="/login">
+          <input class="input-full" type="text" name="username" placeholder="Username" required>
+          <input class="input-full" type="password" name="password" placeholder="Password" required>
+          <button class="btn btn-full" type="submit">Sign In</button>
+        </form>
+        <span class="toggle-link" onclick="toggleSignup()">Don't have an account? Create one</span>
+
+        <form id="signupForm" method="post" action="/signup" class="hidden">
+          <input class="input-full" type="text" name="display_name" placeholder="Full name">
+          <input class="input-full" type="text" name="username" placeholder="Choose a username" required>
+          <input class="input-full" type="email" name="email" placeholder="Email (optional)">
+          <input class="input-full" type="password" name="password" placeholder="Choose a password" required>
+          <button class="btn btn-full btn-green" type="submit">Create Account</button>
+        </form>
+      </div>
+
+      <p class="footer-note">By continuing you agree to our Privacy Policy</p>
+    </div>
+  </div>
+
+  <script>
+    function toggleEmailForm() {
+      document.getElementById('emailForm').classList.toggle('hidden');
+    }
+    function toggleSignup() {
+      document.getElementById('signupForm').classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>

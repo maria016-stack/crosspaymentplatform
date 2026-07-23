@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cross Payment Platform Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-badge">💠</div>
+      <div>Cross Payment<br><small>Platform</small></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="{{ 'active' if active_page=='dashboard' else '' }}"><span class="icon">🏠</span> Dashboard</a>
+      <a href="/new-transaction" class="{{ 'active' if active_page=='new_transaction' else '' }}"><span class="icon">🔁</span> New Transaction</a>
+      <a href="/recommendations" class="{{ 'active' if active_page=='recommendations' else '' }}"><span class="icon">✨</span> Recommendations</a>
+      <a href="/analytics" class="{{ 'active' if active_page=='analytics' else '' }}"><span class="icon">📊</span> Analytics</a>
+      <a href="/history" class="{{ 'active' if active_page=='history' else '' }}"><span class="icon">🕒</span> History</a>
+      <a href="/compare" class="{{ 'active' if active_page=='compare' else '' }}"><span class="icon">⇄</span> Compare Platforms</a>
+      <a href="/industry-details" class="{{ 'active' if active_page=='industry' else '' }}"><span class="icon">📈</span> Industry Details</a>
+    </nav>
+    <div class="sidebar-savings">
+      <div class="label">Your Savings This Month</div>
+      <div class="amount">TZS {{ '%.0f'|format(savings.total) if savings is defined else 0 }}</div>
+      <div class="sub">Saved vs other platforms</div>
+      <div class="sparkline"></div>
+    </div>
+    <div class="sidebar-footer">
+      <a href="/settings" class="{{ 'active' if active_page=='settings' else '' }}"><span class="icon">⚙️</span> Settings</a>
+      <a href="/about" class="{{ 'active' if active_page=='about' else '' }}"><span class="icon">ℹ️</span> About</a>
+      <a href="/logout"><span class="icon">🚪</span> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1><span class="dot"></span> Welcome back, {{ user.display_name or user.username }}!</h1>
+        <p>{% block subtitle %}AI-recommend the best payment platform for every transaction{% endblock %}</p>
+      </div>
+      <div class="meta">
+        <div id="topbar-clock"></div>
+        <div class="live-badge"><span class="dot"></span> Live</div>
+      </div>
+    </div>
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

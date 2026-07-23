@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid-4" id="statsRow">
+  <div class="card stat-card">
+    <div class="stat-icon-row">🔁</div>
+    <div class="stat-value" id="stat-total-tx">—</div>
+    <div class="stat-label">Total Transactions</div>
+    <div class="stat-delta" id="stat-total-tx-delta"></div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon-row">📉</div>
+    <div class="stat-value" id="stat-avg-fee">—</div>
+    <div class="stat-label">Avg. Fee Saved</div>
+    <div class="stat-delta" id="stat-avg-fee-delta">Make a recommendation to track</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon-row">🕒</div>
+    <div class="stat-value" id="stat-time-saved">—</div>
+    <div class="stat-label">Time Saved This Week</div>
+    <div class="stat-delta" id="stat-time-saved-delta"></div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon-row">👥</div>
+    <div class="stat-value" id="stat-happy-users">—</div>
+    <div class="stat-label">Happy Users</div>
+    <div class="stat-delta">Active platform users</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>New Transaction</h3>
+    <label class="field-label">Amount (TZS)</label>
+    <input class="input-full" type="number" id="amount" placeholder="50000" min="100" value="50000">
+
+    <label class="field-label">Transaction Type</label>
+    <select class="input-full" id="transaction_type">
+      {% for t in transaction_types %}
+      <option value="{{ t }}" {{ 'selected' if settings and settings.default_transaction_type==t else '' }}>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="field-label">Location (Tanzania)</label>
+    <select class="input-full" id="location">
+      {% for l in locations %}
+      <option value="{{ l }}" {{ 'selected' if settings and settings.default_location==l else '' }}>{{ l }}</option>
+      {% endfor %}
+    </select>
+
+    <button class="btn btn-green btn-full" onclick="getBestPlatform()">⚡ Get Best Platform</button>
+  </div>
+
+  <div class="card" id="recommendedCard">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">Recommended Platform</h3>
+      <span class="badge" id="bestChoiceBadge" style="background:#fff7ed;color:#9a3412;">Best Choice</span>
+    </div>
+    <div id="recPlaceholder" style="color:#8b98ac; font-size:13px; padding:20px 0;">
+      Enter a transaction and click "Get Best Platform" to see a live recommendation.
+    </div>
+    <div id="recDetails" class="hidden">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin:12px 0;">
+        <div>
+          <div style="font-size:16px; font-weight:700;" id="recPlatformName"></div>
+          <span class="badge badge-success">Recommended</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px; color:#8b98ac;">You will save</div>
+          <div style="font-size:16px; font-weight:700; color:#22c55e;" id="recSavings"></div>
+        </div>
+      </div>
+      <div class="grid-3" style="gap:10px;">
+        <div><div style="font-size:11px; color:#8b98ac;">Comparable Fee</div><div style="font-weight:700;" id="recFee"></div><div style="font-size:11px; color:#22c55e;">Low Fee</div></div>
+        <div><div style="font-size:11px; color:#8b98ac;">Estimated Speed</div><div style="font-weight:700;" id="recSpeed"></div><div style="font-size:11px; color:#22c55e;">Very Fast</div></div>
+        <div><div style="font-size:11px; color:#8b98ac;">Success Rate</div><div style="font-weight:700;" id="recSuccess"></div><div style="font-size:11px; color:#22c55e;">Top rated</div></div>
+      </div>
+      <div class="alert-box alert-info" id="trafficAlert" style="margin-top:14px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">Other Options Comparison</h3>
+      <span class="live-badge"><span class="dot"></span> Live</span>
+    </div>
+    <table style="margin-top:10px;">
+      <thead><tr><th>Platform</th><th>Fee (TZS)</th><th>Speed</th><th>Success Rate</th><th>PRI Score</th></tr></thead>
+      <tbody id="otherOptionsBody">
+        <tr><td colspan="5" style="color:#8b98ac; text-align:center; padding:20px;">Run a recommendation to compare all platforms.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3>Mobile Money Market</h3>
+    <div class="card-sub">Tanzania 2026 baseline</div>
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div style="width:160px; height:160px;"><canvas id="marketShareChart"></canvas></div>
+      <div id="marketShareLegend" style="font-size:12.5px; flex:1;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Recent Recommendations</h3>
+  <div class="card-sub">Your last 5 AI-routed transactions</div>
+  {% if recent_transactions %}
+  <table>
+    <thead><tr><th>Date</th><th>Amount (TZS)</th><th>Platform</th><th>PRI</th><th>Savings</th></tr></thead>
+    <tbody>
+    {% for t in recent_transactions %}
+      {% set p = platforms.get(t.recommended_platform) %}
+      <tr>
+        <td>{{ t.created_at[:16].replace('T',' ') }}</td>
+        <td>{{ '%.0f'|format(t.amount) }}</td>
+        <td>
+          <div class="plat-name-cell">
+            {% if p and p.logo %}
+            <img class="plat-logo" src="/static/images/{{ p.logo }}" alt="{{ t.recommended_platform }}" onerror="this.style.display='none'">
+            {% endif %}
+            {{ t.recommended_platform }}
+          </div>
+        </td>
+        <td>{{ t.pri_score }}</td>
+        <td>TZS {{ '%.0f'|format(t.savings) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#8b98ac; font-size:13px;">No transactions yet — use the form above to get your first recommendation.</p>
+  {% endif %}
+</div>
+
+<script>
+const PLATFORM_LOGOS = {
+  {% for name, p in platforms.items() %}
+  {{ name|tojson }}: {{ p.logo|tojson }}{{ "," if not loop.last }}
+  {% endfor %}
+};
+
+function platformLogoHtml(name, size) {
+  const cls = size === 'lg' ? 'plat-logo-lg' : 'plat-logo';
+  const logo = PLATFORM_LOGOS[name];
+  if (logo) {
+    return `<img class="${cls}" src="/static/images/${logo}" alt="${name}" onerror="this.outerHTML='<span class=&quot;plat-fallback-icon&quot;>💳</span>'">`;
+  }
+  return `<span class="plat-fallback-icon">💳</span>`;
+}
+
+let marketChart = null;
+
+async function loadDashboardStats() {
+  const res = await fetch('/api/dashboard-stats');
+  const data = await res.json();
+
+  document.getElementById('stat-total-tx').textContent = data.total_transactions.toLocaleString();
+  document.getElementById('stat-total-tx-delta').textContent = `+${data.user_transactions} from your sessions`;
+
+  document.getElementById('stat-avg-fee').textContent = data.avg_fee_saved_pct + '%';
+  document.getElementById('stat-avg-fee-delta').textContent =
+    data.avg_fee_saved_pct > 0 ? 'Across your recommendations' : 'Make a recommendation to track';
+
+  document.getElementById('stat-time-saved').textContent = data.time_saved_seconds + 's';
+  document.getElementById('stat-time-saved-delta').textContent = `${data.transactions_this_week} transactions this week`;
+
+  document.getElementById('stat-happy-users').textContent = data.happy_users.toLocaleString();
+
+  renderMarketShare(data.market_share);
+}
+
+function renderMarketShare(shareObj) {
+  const labels = Object.keys(shareObj);
+  const values = Object.values(shareObj);
+  const colors = ['#22c55e', '#dc2626', '#2563eb', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f97316', '#14b8a6', '#a855f7', '#64748b'];
+
+  if (marketChart) marketChart.destroy();
+  marketChart = new Chart(document.getElementById('marketShareChart'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  const legend = document.getElementById('marketShareLegend');
+  legend.innerHTML = labels.slice(0, 5).map((l, i) =>
+    `<div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+      <span style="width:9px;height:9px;border-radius:50%;background:${colors[i]};display:inline-block;"></span>
+      ${platformLogoHtml(l)} ${l} <strong style="margin-left:auto;">${values[i]}%</strong>
+    </div>`
+  ).join('');
+}
+
+async function getBestPlatform() {
+  const amount = parseFloat(document.getElementById('amount').value || 0);
+  const transaction_type = document.getElementById('transaction_type').value;
+  const location = document.getElementById('location').value;
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Calculating...';
+
+  try {
+    const res = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({amount, transaction_type, location})
+    });
+    const data = await res.json();
+    const best = data.recommended;
+
+    document.getElementById('recPlaceholder').classList.add('hidden');
+    document.getElementById('recDetails').classList.remove('hidden');
+    document.getElementById('recPlatformName').innerHTML =
+      `<span style="display:flex;align-items:center;">${platformLogoHtml(best.platform, 'lg')}${best.platform}</span>`;
+    document.getElementById('recSavings').textContent = 'TZS ' + data.savings;
+    document.getElementById('recFee').textContent = 'TZS ' + best.fee;
+    document.getElementById('recSpeed').textContent = best.speed_seconds + ' sec';
+    document.getElementById('recSuccess').textContent = best.success_rate + '%';
+
+    const alertBox = document.getElementById('trafficAlert');
+    let alertMsg = '';
+    if (data.smart_routed) alertMsg += 'Smart-routed to a bank/aggregator platform (amount exceeds TZS 5,000,000). ';
+    alertMsg += data.is_peak ? 'Peak-hour congestion detected right now.' : 'Low-to-moderate traffic right now — a good time for this transaction.';
+    alertBox.textContent = alertMsg;
+
+    const tbody = document.getElementById('otherOptionsBody');
+    tbody.innerHTML = data.all_ranked.map((r, i) => `
+      <tr>
+        <td><div class="plat-name-cell">${platformLogoHtml(r.platform)}${r.platform}${i === 0 ? ' <span class="badge badge-success" style="margin-left:6px;">Best</span>' : ''}</div></td>
+        <td>${r.fee}</td>
+        <td>${r.speed_seconds}s</td>
+        <td>${r.success_rate}%</td>
+        <td>${r.pri_score}</td>
+      </tr>`).join('');
+
+    loadDashboardStats();
+  } catch (e) {
+    alert('Could not get a recommendation. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚡ Get Best Platform';
+  }
+}
+
+loadDashboardStats();
+</script>
+{% endblock %}
