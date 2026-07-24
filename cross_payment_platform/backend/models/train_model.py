@@ -103,7 +103,7 @@ def train_models(df: pd.DataFrame):
     X_train, X_test, y_train, y_test = train_test_split(
         features, df["success"], test_size=0.2, random_state=42, stratify=df["success"]
     )
-    rf = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42, n_jobs=-1)
+   rf = RandomForestClassifier(n_estimators=60, max_depth=8, random_state=42, n_jobs=-1)
     rf.fit(X_train, y_train)
     rf_pred = rf.predict(X_test)
     rf_acc = accuracy_score(y_test, rf_pred)
@@ -114,7 +114,7 @@ def train_models(df: pd.DataFrame):
     Xf_train, Xf_test, yf_train, yf_test = train_test_split(
         features, df["flagged"], test_size=0.2, random_state=42, stratify=df["flagged"]
     )
-    gb = GradientBoostingClassifier(n_estimators=150, max_depth=3, learning_rate=0.1, random_state=42)
+   gb = GradientBoostingClassifier(n_estimators=80, max_depth=3, learning_rate=0.1, random_state=42)
     gb.fit(Xf_train, yf_train)
     gb_pred = gb.predict(Xf_test)
     gb_acc = accuracy_score(yf_test, gb_pred)
@@ -131,7 +131,7 @@ def train_models(df: pd.DataFrame):
         "feature_columns": list(features.columns),
         "metrics": {"rf_accuracy": rf_acc, "rf_f1": rf_f1, "gb_accuracy": gb_acc, "gb_f1": gb_f1},
     }
-    joblib.dump(bundle, os.path.join(HERE, "model_bundle.pkl"))
+    joblib.dump(bundle, BUNDLE_PATH, compress=3)
     print("Saved model bundle to model_bundle.pkl")
 
 
