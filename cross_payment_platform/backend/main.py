@@ -1,5 +1,10 @@
 import os
 import random
+import logging
+import traceback
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("cross-payment")
 from datetime import datetime, timedelta
 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
@@ -248,27 +253,32 @@ def about_page(request: Request):
 # ---------------------------------------------------------------------------
 @app.post("/api/recommend")
 async def api_recommend(request: Request):
-    user_id = auth.require_login(request)
-    body = await request.json()
-    amount = float(body.get("amount", 0))
-    transaction_type = body.get("transaction_type", TRANSACTION_TYPES[0])
-    location = body.get("location", LOCATIONS[0])
+    try:
+        user_id = auth.require_login(request)
+        body = await request.json()
+        amount = float(body.get("amount", 0))
+        transaction_type = body.get("transaction_type", TRANSACTION_TYPES[0])
+        location = body.get("location", LOCATIONS[0])
 
-    result = run_recommendation(amount, transaction_type, location)
-    best = result["recommended"]
+        result = run_recommendation(amount, transaction_type, location)
+        best = result["recommended"]
 
-    db.add_transaction(
-        user_id=user_id,
-        amount=amount,
-        transaction_type=transaction_type,
-        location=location,
-        recommended_platform=best["platform"],
-        pri_score=best["pri_score"],
-        fee=best["fee"],
-        speed_seconds=best["speed_seconds"],
-        savings=result["savings"],
-    )
-    return JSONResponse(result)
+        db.add_transaction(
+            user_id=user_id,
+            amount=amount,
+            transaction_type=transaction_type,
+            location=location,
+            recommended_platform=best["platform"],
+            pri_score=best["pri_score"],
+            fee=best["fee"],
+            speed_seconds=best["speed_seconds"],
+            savings=result["savings"],
+        )
+        return JSONResponse(result)
+    except Exception as e:
+        logger.error("RECOMMEND FAILED: %s", str(e))
+        logger.error(traceback.format_exc())
+        raise
 
 
 @app.get("/api/transactions")
