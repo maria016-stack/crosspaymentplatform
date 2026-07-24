@@ -253,6 +253,7 @@ def about_page(request: Request):
 # ---------------------------------------------------------------------------
 @app.post("/api/recommend")
 async def api_recommend(request: Request):
+    logger.info("RECOMMEND ENDPOINT HIT")
     try:
         user_id = auth.require_login(request)
         body = await request.json()
